@@ -1,0 +1,55 @@
+cmake_minimum_required(VERSION 3.10)
+project(mstools)
+set(CMAKE_CXX_STANDARD 20)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_find")
+
+include(boilerplate)
+
+find_package(itslib)
+find_package(hvtool)
+
+if (WIN32 OR DARWIN)
+    list(APPEND MEMDUMP_SRCFILES src/pmemdump.cpp)
+    if (WIN32)
+        list(APPEND MEMDUMP_SRCFILES src/sysint-physmem.cpp)
+    endif()
+    if (DARWIN)
+        list(APPEND MEMDUMP_SRCFILES src/macosx_rights.cpp)
+    endif()
+    add_executable(memdump ${MEMDUMP_SRCFILES})
+    target_link_libraries(memdump PUBLIC itslib)
+    if (WIN32)
+        target_compile_definitions(memdump PUBLIC -DWIN32MEMDMP )
+    elseif(DARWIN)
+        target_compile_definitions(memdump PUBLIC -DUNIXMEMDMP )
+        find_library(SecurityFramework Security)
+        target_link_libraries(memdump PUBLIC ${SecurityFramework})
+    endif()
+endif()
+
+if (WIN32)
+    add_executable(sdread src/psdread.cpp )
+    target_link_libraries(sdread PUBLIC itslib)
+    target_compile_definitions(sdread PUBLIC -D_NO_RAPI )
+endif()
+
+if (WIN32)
+    add_executable(setmem src/psetmem.cpp src/sysint-physmem.cpp)
+    target_link_libraries(setmem itslib)
+    target_compile_definitions(setmem PUBLIC -DWIN32SETMEM )
+endif()
+
+if (WIN32)
+    add_executable(postmsg src/ppostmsg.cpp)
+    target_link_libraries(postmsg itslib)
+    target_compile_definitions(postmsg PUBLIC -DWIN32POSTMSG )
+endif()
+
+if (WIN32)
+    add_executable(regutl src/pregutl.cpp)
+    target_link_libraries(regutl PUBLIC itslib reglib)
+    target_compile_definitions(regutl PUBLIC -DWIN32REGUTL -D_UNICODE -DUNICODE)
+endif()
+
+
+
